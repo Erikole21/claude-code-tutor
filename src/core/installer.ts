@@ -15,7 +15,13 @@ function skillFilePath(id: string): string {
   return join(skillsBase(), id, 'SKILL.md')
 }
 
-function prependFrontmatter(content: string): string {
+function hasPulseFrontmatter(content: string): boolean {
+  const match = content.match(/^---\n([\s\S]*?)\n---/)
+  return match !== null && /^_pulse:\s*true$/m.test(match[1])
+}
+
+function ensurePulseFrontmatter(content: string): string {
+  if (hasPulseFrontmatter(content)) return content
   return `---\n_pulse: true\n---\n${content}`
 }
 
@@ -42,7 +48,7 @@ export function install(skills: SkillInput[]): void {
     }
 
     mkdirSync(dir, { recursive: true })
-    writeFileSync(filePath, prependFrontmatter(skill.content), 'utf-8')
+    writeFileSync(filePath, ensurePulseFrontmatter(skill.content), 'utf-8')
   }
 }
 

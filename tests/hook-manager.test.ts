@@ -29,7 +29,10 @@ describe('hook-manager', () => {
       const settings = readSettings(dir)
       expect(settings.hooks.SessionStart).toHaveLength(1)
       expect(settings.hooks.SessionStart[0]._pulse).toBe(true)
-      expect(settings.hooks.SessionStart[0].command).toMatch(/npx/)
+      expect(settings.hooks.SessionStart[0].matcher).toBe('')
+      expect(settings.hooks.SessionStart[0].hooks).toHaveLength(1)
+      expect(settings.hooks.SessionStart[0].hooks[0].type).toBe('command')
+      expect(settings.hooks.SessionStart[0].hooks[0].command).toMatch(/npx/)
     })
 
     it('adds hook to settings without hooks section', () => {
@@ -42,6 +45,8 @@ describe('hook-manager', () => {
       expect(settings.permissions).toEqual({})
       expect(settings.hooks.SessionStart).toHaveLength(1)
       expect(settings.hooks.SessionStart[0]._pulse).toBe(true)
+      expect(settings.hooks.SessionStart[0].matcher).toBe('')
+      expect(settings.hooks.SessionStart[0].hooks[0].type).toBe('command')
     })
 
     it('appends to existing user hooks', () => {
