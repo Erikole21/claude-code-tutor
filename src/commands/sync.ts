@@ -138,10 +138,36 @@ export async function syncCore(options: SyncOptions): Promise<SyncResult[]> {
       results.push({ id: skill.id, action: 'updated', transformer: transformed[0]?.transformedWith })
       log(`  ✓ ${skill.id} updated`)
     } catch (err) {
-      hasErrors = true
       const msg = err instanceof Error ? err.message : String(err)
-      warn(`  ✗ ${skill.id} failed: ${msg}`)
-      results.push({ id: skill.id, action: 'failed', error: msg })
+
+      // Try bundled fallback before giving up
+      const fallbackIds = skill.manualSections
+        ? skill.manualSections.map((s) => s.id)
+        : [skill.id]
+      let recovered = false
+
+      for (const fid of fallbackIds) {
+        try {
+          const fallbackContent = loadStaticSkillContent(fid)
+          install([{ id: fid, content: fallbackContent }])
+          meta.skills[fid] = {
+            syncedAt: new Date().toISOString(),
+            transformedWith: 'fixed',
+          }
+          recovered = true
+        } catch {
+          // No fallback available for this id
+        }
+      }
+
+      if (recovered) {
+        warn(`  ⚠ ${skill.id} fetch failed, installed from bundled fallback`)
+        results.push({ id: skill.id, action: 'updated', transformer: 'fixed' })
+      } else {
+        hasErrors = true
+        warn(`  ✗ ${skill.id} failed: ${msg}`)
+        results.push({ id: skill.id, action: 'failed', error: msg })
+      }
     }
   }
 
