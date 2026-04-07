@@ -26,6 +26,18 @@ Global install makes the `pulse` command available system-wide, but you still ne
 pulse init
 ```
 
+### Update
+
+```bash
+npm update -g claude-code-pulse-tutor
+```
+
+Then re-initialize each repo to apply hook and skill fixes:
+
+```bash
+pulse init --force
+```
+
 ### Quick run (no global install)
 
 ```bash
