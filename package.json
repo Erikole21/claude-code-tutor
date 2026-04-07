@@ -1,5 +1,5 @@
 {
-  "name": "claude-code-pulse",
+  "name": "claude-code-pulse-tutor",
   "version": "1.0.0",
   "description": "Keep Claude Code alive. Fresh docs, built-in tutor, always in sync.",
   "type": "module",
@@ -22,6 +22,16 @@
     "hooks",
     "tutor"
   ],
+  "author": "Erik Rodriguez",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Erikole21/claude-code-pulse.git"
+  },
+  "homepage": "https://github.com/Erikole21/claude-code-pulse#readme",
+  "bugs": {
+    "url": "https://github.com/Erikole21/claude-code-pulse/issues"
+  },
   "engines": {
     "node": ">=18"
   },

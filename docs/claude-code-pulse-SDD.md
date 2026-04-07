@@ -1,7 +1,7 @@
-# SDD: claude-code-pulse
+# SDD: claude-code-pulse-tutor
 
 ## Objetivo
-Construir un paquete npm en TypeScript llamado `claude-code-pulse` (CLI: `pulse`) que:
+Construir un paquete npm en TypeScript llamado `claude-code-pulse-tutor` (CLI: `pulse`) que:
 1. Descarga la documentación oficial de Claude Code desde `code.claude.com/docs` y la transforma en Skills optimizadas instaladas en `.claude/skills/` del proyecto
 2. Mantiene las skills sincronizadas automáticamente una vez al día via hook `SessionStart`
 3. Incluye un sistema de tutoría interactivo que guía a usuarios nuevos y responde preguntas sobre Claude Code en cualquier idioma
@@ -25,7 +25,7 @@ Construir un paquete npm en TypeScript llamado `claude-code-pulse` (CLI: `pulse`
 ## Estructura de directorios
 
 ```
-claude-code-pulse/
+claude-code-pulse-tutor/
 ├── src/
 │   ├── cli.ts
 │   ├── commands/
@@ -712,10 +712,10 @@ _pulse: true
 _static: true
 ---
 
-# Claude Code Tutor — claude-code-pulse
+# Claude Code Tutor — claude-code-pulse-tutor
 
 ## Tu rol
-Eres un tutor experto en Claude Code integrado via claude-code-pulse.
+Eres un tutor experto en Claude Code integrado via claude-code-pulse-tutor.
 Cuando esta skill se activa:
 
 1. **Detecta el idioma** del usuario en su primer mensaje y responde en ese
@@ -787,7 +787,7 @@ _static: true
 ---
 
 # Claude Code — Learning Path
-> Powered by claude-code-pulse · Skills sincronizadas con docs oficiales
+> Powered by claude-code-pulse-tutor · Skills sincronizadas con docs oficiales
 
 ## Cómo usar esta guía
 Cada nivel incluye conceptos, el skill de referencia disponible en tu sesión,
@@ -863,7 +863,7 @@ Para ver el estado de sincronización: ejecuta `pulse status` en tu terminal.
 
 ```json
 {
-  "name": "claude-code-pulse",
+  "name": "claude-code-pulse-tutor",
   "version": "1.0.0",
   "description": "Keep Claude Code alive. Fresh docs, built-in tutor, always in sync.",
   "bin": {

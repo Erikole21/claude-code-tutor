@@ -6,7 +6,7 @@ interface GreetOptions {
 }
 
 const WELCOME_MESSAGE = `\
-claude-code-pulse is active — your skills are synchronized with the official Claude Code docs.
+claude-code-pulse-tutor is active — your skills are synchronized with the official Claude Code docs.
 
 - Use /cc-tutor for an interactive guided tour of Claude Code features
 - Use /cc-learning-path to see the full structured curriculum by level

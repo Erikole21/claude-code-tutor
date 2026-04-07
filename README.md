@@ -1,4 +1,4 @@
-# claude-code-pulse
+# claude-code-pulse-tutor
 
 Keep Claude Code alive. Fresh docs, built-in tutor, always in sync.
 
@@ -11,7 +11,7 @@ Keep Claude Code alive. Fresh docs, built-in tutor, always in sync.
 ### Recommended (global install)
 
 ```bash
-npm install -g claude-code-pulse
+npm install -g claude-code-pulse-tutor
 ```
 
 Then verify:
@@ -186,7 +186,7 @@ $ pulse memory
 ### Set it up once per repo, works every session
 
 ```bash
-npm install -g claude-code-pulse
+npm install -g claude-code-pulse-tutor
 cd my-project
 pulse init
 # Done. Every Claude Code session in this repo now has fresh docs and Pulse as your tutor.

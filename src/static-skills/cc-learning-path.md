@@ -1,5 +1,5 @@
 # Claude Code — Learning Path
-> Powered by claude-code-pulse · Skills sincronizadas con docs oficiales
+> Powered by claude-code-pulse-tutor · Skills sincronizadas con docs oficiales
 
 ## Cómo usar esta guía
 Cada nivel incluye conceptos, el skill de referencia disponible en tu sesión,
