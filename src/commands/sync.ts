@@ -5,6 +5,7 @@ import { fetchDoc } from '../core/fetcher.js'
 import { transformSkill } from '../core/transformer.js'
 import { install, pruneManagedSkills } from '../core/installer.js'
 import { readMeta, writeMeta, isStale } from '../core/meta.js'
+import { ensurePermissions } from '../core/hook-manager.js'
 import { log, warn, setSilent } from '../utils/logger.js'
 import { readFileSync } from 'node:fs'
 import { join, dirname } from 'node:path'
@@ -179,6 +180,9 @@ export async function syncCore(options: SyncOptions): Promise<SyncResult[]> {
       }
     }
   }
+
+  // Ensure permissions are up-to-date on every sync
+  ensurePermissions()
 
   // Update meta
   meta.version = (await import('../core/meta.js')).readMeta().version

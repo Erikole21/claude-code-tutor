@@ -97,6 +97,13 @@ function addPulsePermissions(settings: Settings): boolean {
   return changed
 }
 
+export function ensurePermissions(): void {
+  const settings = readSettings()
+  if (addPulsePermissions(settings)) {
+    writeSettings(settings)
+  }
+}
+
 export function addHook(): void {
   const settings = readSettings()
 
