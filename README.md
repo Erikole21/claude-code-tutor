@@ -2,9 +2,12 @@
 
 Your Claude Code companion. Fresh docs, built-in tutor (Pulse), always in sync.
 
+[![npm version](https://img.shields.io/npm/v/claude-code-tutor)](https://www.npmjs.com/package/claude-code-tutor)
 ![Node >=18](https://img.shields.io/badge/node-%3E%3D18-339933)
 ![TypeScript](https://img.shields.io/badge/typescript-5.x-3178c6)
 ![Tests](https://img.shields.io/badge/tests-vitest-6e9f18)
+
+**npm:** [claude-code-tutor](https://www.npmjs.com/package/claude-code-tutor) | **GitHub:** [Erikole21/claude-code-tutor](https://github.com/Erikole21/claude-code-tutor)
 
 ## Installation
 
@@ -277,7 +280,7 @@ Pulse only manages skills marked with `_pulse: true`, so user-owned custom skill
 |---|---|---|
 | `pulse init` | Initializes pulse in current project. | `--force`, `--yes`, `--skills <ids...>` |
 | `pulse sync` | Fetches, transforms, and installs skills. | `--force`, `--if-stale <seconds>`, `--silent`, `--skills <ids...>` |
-| `pulse greet` | Emits first-session tutor context. | `--once` |
+| `pulse greet` | Emits session context for the SessionStart hook. | _(none)_ |
 | `pulse list` | Lists installed skills and freshness state. | _(none)_ |
 | `pulse status` | Shows global pulse status and diagnostics. | _(none)_ |
 | `pulse uninstall` | Removes pulse hook and pulse-managed skills. | `--keep-hook`, `--keep-skills`, `--purge-memory` |
@@ -301,9 +304,9 @@ Memory is stored locally and never leaves your machine. Use `pulse uninstall --p
 ## Sync mechanism
 
 - **ETag caching**: unchanged docs return `304` and are skipped.
-- **Transformer pipeline**: tries Claude CLI transform first, then static fallback.
+- **Transformer pipeline**: tries Claude CLI transform first, then static fallback. Truncated skills include a note directing Claude to fetch the full official documentation instead of guessing.
 - **Bundled fallback**: when fetch or manual-split fails, pulse installs pre-built skills from `skills-fallback/` so you always have a working reference.
-- **SessionStart hook**: runs daily stale-aware sync (`--if-stale 86400`) and one-time greet.
+- **SessionStart hook**: runs daily stale-aware sync (`--if-stale 86400`) and injects tutor activation context every session.
 
 ## Configuration
 
