@@ -48,11 +48,19 @@ For each non-static skill in the registry, `pulse sync` SHALL: fetch the source 
 - **THEN** the content is transformed, split if applicable, and installed
 
 ### Requirement: Static skills handling
-Skills with `static: true` in the registry SHALL be installed from their bundled content without fetching or transforming. They SHALL be processed during every sync.
+Skills with `static: true` in the registry SHALL be installed from their bundled content without fetching or transforming. They SHALL be processed during every sync. For the `cc-tutor` skill specifically, the sync process SHALL append the dynamically generated skill index (from `generateSkillIndex()`) to the static content before installing.
 
-#### Scenario: Static skill installation
-- **WHEN** sync encounters a skill with `static: true`
-- **THEN** it installs the skill from the bundled `skills-fallback/` directory content
+#### Scenario: Static skill installation (non-tutor)
+- **WHEN** sync encounters a static skill other than cc-tutor (e.g., cc-learning-path)
+- **THEN** it installs the skill from bundled content without modification
+
+#### Scenario: cc-tutor gets dynamic index appended
+- **WHEN** sync encounters the cc-tutor static skill
+- **THEN** it loads the bundled content, appends the output of `generateSkillIndex(SKILLS_REGISTRY)`, and installs the combined content
+
+#### Scenario: Fallback generation also appends index
+- **WHEN** `scripts/generate-fallback-skills.ts` processes the cc-tutor skill
+- **THEN** it appends the same `generateSkillIndex()` output to the static content before writing the fallback file
 
 ### Requirement: Meta update after sync
 After all skills are processed, `pulse sync` SHALL update `.pulse-meta.json` with the sync timestamp, status (success/partial/failed), per-skill sync info, and updated ETags.

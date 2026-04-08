@@ -15,14 +15,16 @@ function generateFrontmatter(
   name: string,
   description: string,
   source: string,
-  transformedWith: string,
+  disableModelInvocation: boolean | undefined,
 ): string {
   const syncedAt = new Date().toISOString()
+  const shouldDisableModelInvocation = disableModelInvocation ?? true
+
   return [
     '---',
     `name: ${name}`,
     `description: ${JSON.stringify(description)}`,
-    'invocation: auto',
+    ...(shouldDisableModelInvocation ? ['disable-model-invocation: true'] : []),
     '_pulse: true',
     `_syncedAt: "${syncedAt}"`,
     `_source: "${source}"`,
@@ -48,7 +50,12 @@ export async function transformSkill(
   // Static/fixed skills: no transformation needed
   if (def.static) {
     log(`  → ${def.id}: fixed (static skill)`)
-    const frontmatter = generateFrontmatter(def.id, def.description, 'static', 'fixed')
+    const frontmatter = generateFrontmatter(
+      def.id,
+      def.description,
+      'static',
+      def.disableModelInvocation,
+    )
     return [{
       id: def.id,
       filename: `.claude/skills/${def.id}/SKILL.md`,
@@ -87,7 +94,12 @@ export async function transformSkill(
     const sectionDef = def.manualSections?.find((ms) => ms.id === section.id)
     const description = sectionDef?.description ?? def.description
 
-    const frontmatter = generateFrontmatter(finalId, description, source, method)
+    const frontmatter = generateFrontmatter(
+      finalId,
+      description,
+      source,
+      def.disableModelInvocation,
+    )
 
     return {
       id: finalId,

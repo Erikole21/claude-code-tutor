@@ -6,6 +6,7 @@ import { transformSkill } from '../core/transformer.js'
 import { install } from '../core/installer.js'
 import { readMeta, writeMeta, isStale } from '../core/meta.js'
 import { log, warn, setSilent } from '../utils/logger.js'
+import { generateSkillIndex } from '../core/skill-index.js'
 import { readFileSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -71,7 +72,10 @@ export async function syncCore(options: SyncOptions): Promise<SyncResult[]> {
     try {
       if (skill.static) {
         // Static skills: install from bundled content
-        const content = loadStaticSkillContent(skill.id)
+        let content = loadStaticSkillContent(skill.id)
+        if (skill.id === 'cc-tutor') {
+          content = content.trimEnd() + '\n\n' + generateSkillIndex(SKILLS_REGISTRY)
+        }
         install([{ id: skill.id, content }])
         meta.skills[skill.id] = {
           syncedAt: new Date().toISOString(),

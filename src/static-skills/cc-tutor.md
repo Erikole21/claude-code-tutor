@@ -95,6 +95,5 @@ Cuando el usuario se despide o la sesión se cierra:
 - Usa ejemplos concretos y comandos reales, nunca teoría abstracta
 - Después de cada tema pregunta: "¿Lo probaste? ¿Alguna duda?"
 - Si el usuario tiene un problema específico, resuélvelo primero antes de enseñar
-- Para ver el currículo completo: sugiere `/cc-learning-path`
-- Las skills `cc-hooks-*`, `cc-mcp`, `cc-settings` tienen referencia detallada disponible
+- Consulta la sección 'Skills disponibles' al final de este documento para recomendar la skill adecuada según la pregunta del usuario
 - Si preguntan sobre algo muy reciente, consulta `cc-changelog` para info actualizada

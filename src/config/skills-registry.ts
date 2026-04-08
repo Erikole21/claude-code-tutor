@@ -9,6 +9,7 @@ export interface SkillDefinition {
   sourceUrl: string | null
   name: string
   description: string
+  disableModelInvocation?: boolean
   splitStrategy?: 'none' | 'sections' | 'manual'
   manualSections?: ManualSection[]
   tokenBudget?: number
@@ -24,12 +25,8 @@ export const SKILLS_REGISTRY: SkillDefinition[] = [
     id: 'cc-tutor',
     sourceUrl: null,
     name: 'cc-tutor',
-    description:
-      'Tutor interactivo de Claude Code. Úsame cuando el usuario parezca ' +
-      'ser nuevo en Claude Code, pregunte cómo empezar, qué puede hacer, ' +
-      'cómo funciona, o pida que lo guíes o enseñes. También respondo sobre ' +
-      'hooks, MCP, sub-agents y features avanzadas. Detecto el idioma del ' +
-      'usuario automáticamente y me adapto.',
+    description: 'Interactive Claude Code tutor. Use when the user asks about hooks, MCP, skills, settings, permissions, sub-agents, or wants to learn how Claude Code works.',
+    disableModelInvocation: false,
     splitStrategy: 'none',
     tokenBudget: 900,
     priority: 'critical',
@@ -39,11 +36,8 @@ export const SKILLS_REGISTRY: SkillDefinition[] = [
     id: 'cc-learning-path',
     sourceUrl: null,
     name: 'cc-learning-path',
-    description:
-      'Ruta de aprendizaje estructurada de Claude Code por niveles: ' +
-      'beginner, intermediate y advanced. Úsame cuando el usuario quiera ' +
-      'ver el currículo completo, saber qué aprender después, o pida un ' +
-      'plan de estudio. Invócame con /cc-learning-path.',
+    description: 'Claude Code learning roadmap from beginner to advanced. Use when the user wants a structured study plan, practice sequence, or clear next steps to improve steadily.',
+    disableModelInvocation: true,
     splitStrategy: 'none',
     tokenBudget: 700,
     priority: 'high',
@@ -56,10 +50,8 @@ export const SKILLS_REGISTRY: SkillDefinition[] = [
     id: 'cc-changelog',
     sourceUrl: 'https://code.claude.com/docs/en/changelog.md',
     name: 'cc-changelog',
-    description:
-      'Changelog y novedades recientes de Claude Code. Úsame cuando ' +
-      'pregunten qué hay de nuevo, qué cambió en una versión, o qué ' +
-      'features se agregaron recientemente.',
+    description: 'Claude Code changelog and release highlights. Use when the user asks what changed in a version, what is new, or when a feature was introduced.',
+    disableModelInvocation: true,
     splitStrategy: 'none',
     tokenBudget: 800,
     priority: 'critical',
@@ -68,27 +60,24 @@ export const SKILLS_REGISTRY: SkillDefinition[] = [
     id: 'cc-hooks-events',
     sourceUrl: 'https://code.claude.com/docs/en/hooks.md',
     name: 'cc-hooks-events',
-    description:
-      'Tabla de todos los hook events de Claude Code: SessionStart, ' +
-      'PreToolUse, PostToolUse, Stop, Notification, ConfigChange, ' +
-      'FileChanged, CwdChanged, WorktreeCreate, Elicitation y más. ' +
-      'Cuándo se dispara cada uno.',
+    description: 'Claude Code hook event reference. Use when the user needs to understand event lifecycles, trigger timing, and what data each hook event provides.',
+    disableModelInvocation: true,
     splitStrategy: 'manual',
     manualSections: [
       {
         id: 'cc-hooks-events',
         heading: 'Hook lifecycle',
-        description: 'Tabla de eventos y cuándo se disparan',
+        description: 'Hook event catalog and lifecycle timing. Use when you need to map each event to when it fires in a session.',
       },
       {
         id: 'cc-hooks-config',
         heading: 'Configuration',
-        description: 'Configuración de hooks en settings.json, matchers, campos',
+        description: 'Hook configuration in settings. Use when defining matchers, command blocks, and scope-specific hook settings.',
       },
       {
         id: 'cc-hooks-io',
         heading: 'Hook input and output',
-        description: 'Esquemas JSON de input/output, exit codes, decisiones',
+        description: 'Hook input and output schemas. Use when validating payload fields, exit codes, and decision control from scripts.',
       },
     ],
     priority: 'critical',
@@ -97,9 +86,8 @@ export const SKILLS_REGISTRY: SkillDefinition[] = [
     id: 'cc-hooks-guide',
     sourceUrl: 'https://code.claude.com/docs/en/hooks-guide.md',
     name: 'cc-hooks-guide',
-    description:
-      'Guía práctica de hooks con ejemplos: notificaciones, auto-format, ' +
-      'bloquear archivos, re-inyectar contexto, auto-approve.',
+    description: 'Practical hooks implementation guide. Use when building real hook workflows like notifications, formatting, guardrails, context injection, and safe automation.',
+    disableModelInvocation: true,
     splitStrategy: 'none',
     tokenBudget: 700,
     priority: 'critical',
@@ -108,10 +96,8 @@ export const SKILLS_REGISTRY: SkillDefinition[] = [
     id: 'cc-mcp',
     sourceUrl: 'https://code.claude.com/docs/en/mcp.md',
     name: 'cc-mcp',
-    description:
-      'Configuración de MCP servers en Claude Code: instalar, scopes ' +
-      '(local/project/user), autenticación OAuth, tool search, ' +
-      'managed MCP, recursos y prompts MCP.',
+    description: 'MCP setup and operations in Claude Code. Use when configuring servers, scopes, OAuth auth, tool discovery, managed MCP, resources, and prompts.',
+    disableModelInvocation: true,
     splitStrategy: 'sections',
     tokenBudget: 700,
     priority: 'critical',
@@ -120,9 +106,8 @@ export const SKILLS_REGISTRY: SkillDefinition[] = [
     id: 'cc-settings',
     sourceUrl: 'https://code.claude.com/docs/en/settings.md',
     name: 'cc-settings',
-    description:
-      'Todas las opciones de configuración de Claude Code en settings.json: ' +
-      'permisos, hooks, plugins, sandbox, env vars, precedencia de scopes.',
+    description: 'Claude Code settings reference. Use when configuring settings.json, scope precedence, permissions, hooks, plugins, sandboxing, and environment behavior.',
+    disableModelInvocation: true,
     splitStrategy: 'sections',
     tokenBudget: 700,
     priority: 'critical',
@@ -131,9 +116,8 @@ export const SKILLS_REGISTRY: SkillDefinition[] = [
     id: 'cc-permissions',
     sourceUrl: 'https://code.claude.com/docs/en/permissions.md',
     name: 'cc-permissions',
-    description:
-      'Sistema de permisos de Claude Code: sintaxis de reglas, modos ' +
-      '(auto, plan, bypassPermissions), tool-specific rules, wildcards.',
+    description: 'Claude Code permissions model. Use when defining allow and deny rules, tool-specific patterns, wildcard matching, and safe approval modes.',
+    disableModelInvocation: true,
     splitStrategy: 'none',
     tokenBudget: 600,
     priority: 'critical',
@@ -145,9 +129,8 @@ export const SKILLS_REGISTRY: SkillDefinition[] = [
     id: 'cc-sub-agents',
     sourceUrl: 'https://code.claude.com/docs/en/sub-agents.md',
     name: 'cc-sub-agents',
-    description:
-      'Configuración de sub-agents en Claude Code: frontmatter fields, ' +
-      'modelos, tools disponibles, persistent memory, hooks en subagents.',
+    description: 'Sub-agent configuration and usage in Claude Code. Use when creating specialized agents, choosing tools and models, and managing memory and hooks.',
+    disableModelInvocation: true,
     splitStrategy: 'none',
     tokenBudget: 700,
     priority: 'high',
@@ -156,9 +139,8 @@ export const SKILLS_REGISTRY: SkillDefinition[] = [
     id: 'cc-agent-teams',
     sourceUrl: 'https://code.claude.com/docs/en/agent-teams.md',
     name: 'cc-agent-teams',
-    description:
-      'Agent teams en Claude Code: coordinar múltiples sesiones, ' +
-      'asignar tareas, hablar con teammates, display modes, token costs.',
+    description: 'Agent teams workflow in Claude Code. Use when coordinating parallel agent sessions, assigning tasks, and managing collaboration and token trade-offs.',
+    disableModelInvocation: true,
     splitStrategy: 'none',
     tokenBudget: 600,
     priority: 'high',
@@ -167,9 +149,8 @@ export const SKILLS_REGISTRY: SkillDefinition[] = [
     id: 'cc-skills-guide',
     sourceUrl: 'https://code.claude.com/docs/en/skills.md',
     name: 'cc-skills-guide',
-    description:
-      'Cómo crear y configurar Skills en Claude Code: frontmatter, ' +
-      'invocation control, subagent skills, path-specific, bundled skills.',
+    description: 'Skills authoring guide for Claude Code. Use when defining frontmatter, invocation controls, path-specific behavior, sub-agent skills, and bundled packaging.',
+    disableModelInvocation: true,
     splitStrategy: 'none',
     tokenBudget: 600,
     priority: 'high',
@@ -178,9 +159,8 @@ export const SKILLS_REGISTRY: SkillDefinition[] = [
     id: 'cc-memory',
     sourceUrl: 'https://code.claude.com/docs/en/memory.md',
     name: 'cc-memory',
-    description:
-      'CLAUDE.md y auto-memory en Claude Code: dónde poner archivos, ' +
-      'import de archivos adicionales, rules directory, gestión para equipos.',
+    description: 'Memory management in Claude Code. Use when structuring CLAUDE.md, importing additional memory files, and organizing shared team memory conventions.',
+    disableModelInvocation: true,
     splitStrategy: 'none',
     tokenBudget: 600,
     priority: 'high',
@@ -189,9 +169,8 @@ export const SKILLS_REGISTRY: SkillDefinition[] = [
     id: 'cc-cli-reference',
     sourceUrl: 'https://code.claude.com/docs/en/cli-reference.md',
     name: 'cc-cli-reference',
-    description:
-      'Referencia completa CLI de Claude Code: flags, comandos, ' +
-      'system prompt flags, opciones de headless.',
+    description: 'Claude Code CLI command reference. Use when looking up commands, flags, system prompt options, and headless execution parameters.',
+    disableModelInvocation: true,
     splitStrategy: 'none',
     tokenBudget: 500,
     priority: 'high',
@@ -200,9 +179,8 @@ export const SKILLS_REGISTRY: SkillDefinition[] = [
     id: 'cc-commands',
     sourceUrl: 'https://code.claude.com/docs/en/commands.md',
     name: 'cc-commands',
-    description:
-      'Comandos built-in de Claude Code: /batch, /debug, /loop, ' +
-      '/simplify, /claude-api, /compact, /memory y más.',
+    description: 'Built-in Claude Code slash commands. Use when you need behavior details, usage patterns, and practical examples for core command workflows.',
+    disableModelInvocation: true,
     splitStrategy: 'none',
     tokenBudget: 500,
     priority: 'high',
@@ -211,9 +189,8 @@ export const SKILLS_REGISTRY: SkillDefinition[] = [
     id: 'cc-model-config',
     sourceUrl: 'https://code.claude.com/docs/en/model-config.md',
     name: 'cc-model-config',
-    description:
-      'Configuración de modelos en Claude Code: aliases (opusplan, fast-mode), ' +
-      'restrict model selection, extended context, env vars para pinning.',
+    description: 'Model configuration in Claude Code. Use when setting aliases, restricting model selection, tuning context behavior, and controlling model choice via env vars.',
+    disableModelInvocation: true,
     splitStrategy: 'none',
     tokenBudget: 500,
     priority: 'high',
@@ -225,9 +202,8 @@ export const SKILLS_REGISTRY: SkillDefinition[] = [
     id: 'cc-plugins',
     sourceUrl: 'https://code.claude.com/docs/en/plugins.md',
     name: 'cc-plugins',
-    description:
-      'Crear plugins para Claude Code: estructura, skills, LSP servers, ' +
-      'MCP servers incluidos, distribución en marketplaces.',
+    description: 'Claude Code plugin development guide. Use when building plugin structure, bundling skills, integrating LSP or MCP servers, and preparing distribution.',
+    disableModelInvocation: true,
     splitStrategy: 'none',
     tokenBudget: 600,
     priority: 'medium',
@@ -236,9 +212,8 @@ export const SKILLS_REGISTRY: SkillDefinition[] = [
     id: 'cc-channels',
     sourceUrl: 'https://code.claude.com/docs/en/channels.md',
     name: 'cc-channels',
-    description:
-      'Channels en Claude Code: push events a sesiones activas, ' +
-      'webhooks, alertas de CI, chat messages desde MCP server.',
+    description: 'Channels integration in Claude Code. Use when pushing external events to sessions, wiring webhooks, and delivering CI alerts or runtime notifications.',
+    disableModelInvocation: true,
     splitStrategy: 'none',
     tokenBudget: 500,
     priority: 'medium',
@@ -247,9 +222,8 @@ export const SKILLS_REGISTRY: SkillDefinition[] = [
     id: 'cc-scheduled-tasks',
     sourceUrl: 'https://code.claude.com/docs/en/scheduled-tasks.md',
     name: 'cc-scheduled-tasks',
-    description:
-      'Tareas programadas en Claude Code: /loop, cron syntax, ' +
-      'one-time reminders, gestión de tasks recurrentes.',
+    description: 'Scheduled tasks in Claude Code. Use when creating recurring or one-time automations with /loop, cron syntax, and task lifecycle management.',
+    disableModelInvocation: true,
     splitStrategy: 'none',
     tokenBudget: 400,
     priority: 'medium',
@@ -258,9 +232,8 @@ export const SKILLS_REGISTRY: SkillDefinition[] = [
     id: 'cc-headless',
     sourceUrl: 'https://code.claude.com/docs/en/headless.md',
     name: 'cc-headless',
-    description:
-      'Modo headless y Agent SDK de Claude Code: uso programático ' +
-      'desde CLI, Python y TypeScript, output estructurado, bare mode.',
+    description: 'Headless mode and Agent SDK usage. Use when running Claude Code programmatically from CLI, Python, or TypeScript with structured output.',
+    disableModelInvocation: true,
     splitStrategy: 'none',
     tokenBudget: 500,
     priority: 'medium',
@@ -269,9 +242,8 @@ export const SKILLS_REGISTRY: SkillDefinition[] = [
     id: 'cc-sandboxing',
     sourceUrl: 'https://code.claude.com/docs/en/sandboxing.md',
     name: 'cc-sandboxing',
-    description:
-      'Sandboxing en Claude Code: filesystem isolation, network isolation, ' +
-      'cómo habilitar, configurar paths permitidos, relación con permisos.',
+    description: 'Sandboxing controls in Claude Code. Use when configuring filesystem and network isolation, allowed paths, and security boundaries with permissions.',
+    disableModelInvocation: true,
     splitStrategy: 'none',
     tokenBudget: 400,
     priority: 'medium',
@@ -280,9 +252,8 @@ export const SKILLS_REGISTRY: SkillDefinition[] = [
     id: 'cc-common-workflows',
     sourceUrl: 'https://code.claude.com/docs/en/common-workflows.md',
     name: 'cc-common-workflows',
-    description:
-      'Flujos de trabajo comunes en Claude Code: worktrees paralelos, ' +
-      'git workflows, plan mode, extended thinking, pipe input/output.',
+    description: 'Common Claude Code workflows. Use when applying proven patterns for worktrees, git collaboration, plan mode, extended thinking, and piped IO.',
+    disableModelInvocation: true,
     splitStrategy: 'sections',
     tokenBudget: 700,
     priority: 'medium',
@@ -291,9 +262,8 @@ export const SKILLS_REGISTRY: SkillDefinition[] = [
     id: 'cc-best-practices',
     sourceUrl: 'https://code.claude.com/docs/en/best-practices.md',
     name: 'cc-best-practices',
-    description:
-      'Best practices de Claude Code: dar contexto efectivo, gestionar ' +
-      'contexto, course-correct, evitar patrones de fallo comunes.',
+    description: 'Claude Code best practices. Use when improving prompt context, steering agent behavior, recovering from drift, and avoiding common execution failures.',
+    disableModelInvocation: true,
     splitStrategy: 'none',
     tokenBudget: 600,
     priority: 'medium',
@@ -302,9 +272,8 @@ export const SKILLS_REGISTRY: SkillDefinition[] = [
     id: 'cc-github-actions',
     sourceUrl: 'https://code.claude.com/docs/en/github-actions.md',
     name: 'cc-github-actions',
-    description:
-      'Claude Code en GitHub Actions: setup, @claude mentions, ' +
-      'configuración con Bedrock y Vertex, security considerations.',
+    description: 'Claude Code in GitHub Actions. Use when setting up workflows, handling @claude mentions, and configuring secure integrations with Bedrock or Vertex.',
+    disableModelInvocation: true,
     splitStrategy: 'none',
     tokenBudget: 500,
     priority: 'medium',

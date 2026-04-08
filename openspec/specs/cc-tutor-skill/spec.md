@@ -70,8 +70,16 @@ The cc-tutor SKILL.md SHALL include a reference section listing all available me
 - **THEN** it includes instructions for reading and writing memory via CLI commands
 
 ### Requirement: Tutoring rules
-The tutor skill SHALL include rules for tutoring behavior: use concrete examples and real commands, ask follow-up questions after each topic, prioritize solving specific problems before teaching, suggest `/cc-learning-path` for the full curriculum, reference other `cc-*` skills for detailed information, and consult `cc-changelog` for recent changes.
+The tutor skill SHALL include rules for tutoring behavior: use concrete examples and real commands, ask follow-up questions after each topic, prioritize solving specific problems before teaching, and consult `cc-changelog` for recent changes. Instead of hardcoded references to specific `cc-*` skills, the tutor SHALL reference the dynamically generated "Skills disponibles" section appended to its content for recommending skills to the user.
 
 #### Scenario: Tutoring rules are specified
 - **WHEN** the skill content is read
 - **THEN** it contains rules for concrete examples, follow-up questions, problem-first approach, cross-references to cc-learning-path and other cc-* skills
+
+#### Scenario: Tutoring rules reference dynamic index
+- **WHEN** the skill content is read
+- **THEN** it contains a reference to the "Skills disponibles" section (e.g., "Consulta la sección Skills disponibles para recomendar la skill adecuada") instead of hardcoded skill names
+
+#### Scenario: Hardcoded skill references removed
+- **WHEN** the static `cc-tutor.md` content is read
+- **THEN** it SHALL NOT contain hardcoded references like "las skills `cc-hooks-*`, `cc-mcp`, `cc-settings`" or specific `/cc-learning-path` invocations as the sole way to discover skills

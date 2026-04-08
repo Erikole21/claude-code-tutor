@@ -5,6 +5,7 @@ import { SKILLS_REGISTRY, type SkillDefinition, type ManualSection } from '../sr
 import { fetchDoc } from '../src/core/fetcher.js'
 import { splitDocument } from '../src/core/splitter.js'
 import { transformStatic } from '../src/core/transformer-static.js'
+import { generateSkillIndex } from '../src/core/skill-index.js'
 import { log, warn } from '../src/utils/logger.js'
 
 const thisFile = fileURLToPath(import.meta.url)
@@ -22,12 +23,15 @@ function frontmatterFor(
   description: string,
   source: string,
   syncedAt: string,
+  disableModelInvocation: boolean | undefined,
 ): string {
+  const shouldDisableModelInvocation = disableModelInvocation ?? true
+
   return [
     '---',
     `name: ${skillId}`,
     `description: ${JSON.stringify(description)}`,
-    'invocation: auto',
+    ...(shouldDisableModelInvocation ? ['disable-model-invocation: true'] : []),
     '_pulse: true',
     `_syncedAt: "${syncedAt}"`,
     `_source: "${source}"`,
@@ -72,16 +76,28 @@ function writeFallbackSkill(
   source: string,
   body: string,
   syncedAt: string,
+  disableModelInvocation: boolean | undefined,
 ): void {
   const outputFile = join(fallbackDir, id, 'SKILL.md')
   mkdirSync(dirname(outputFile), { recursive: true })
-  const content = frontmatterFor(id, description, source, syncedAt) + `${body.trim()}\n`
+  const content =
+    frontmatterFor(id, description, source, syncedAt, disableModelInvocation) + `${body.trim()}\n`
   writeFileSync(outputFile, content, 'utf-8')
 }
 
 async function processStaticSkill(def: SkillDefinition, syncedAt: string): Promise<number> {
-  const body = readStaticSkillBody(def.id)
-  writeFallbackSkill(def.id, def.description, 'static', body, syncedAt)
+  let body = readStaticSkillBody(def.id)
+  if (def.id === 'cc-tutor') {
+    body = body.trimEnd() + '\n\n' + generateSkillIndex(SKILLS_REGISTRY).trimEnd()
+  }
+  writeFallbackSkill(
+    def.id,
+    def.description,
+    'static',
+    body,
+    syncedAt,
+    def.disableModelInvocation,
+  )
   log(`  ✓ ${def.id} (static)`)
   return 1
 }
@@ -110,6 +126,7 @@ async function processDocSkill(def: SkillDefinition, syncedAt: string): Promise<
       def.sourceUrl,
       transformedSection,
       syncedAt,
+      def.disableModelInvocation,
     )
     generated++
   }

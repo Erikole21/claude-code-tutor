@@ -39,7 +39,7 @@ describe('transformer orchestrator', () => {
     expect(result[0].transformedWith).toBe('fixed')
     expect(result[0].filename).toBe('.claude/skills/cc-static/SKILL.md')
     expect(result[0].content).toContain('name: cc-static')
-    expect(result[0].content).toContain('invocation: auto')
+    expect(result[0].content).toContain('disable-model-invocation: true')
     expect(result[0].content).toContain('_pulse: true')
     expect(result[0].content).toContain('_source: "static"')
     expect(result[0].content).not.toContain('_transformedWith:')
@@ -69,5 +69,24 @@ describe('transformer orchestrator', () => {
     expect(result[0].transformedWith).toBe('static')
     expect(result[0].filename).toBe('.claude/skills/cc-doc/SKILL.md')
     expect(result[0].content).toContain('_source: "https://example.com/doc.md"')
+    expect(result[0].content).toContain('disable-model-invocation: true')
+  })
+
+  it('omits disable-model-invocation when explicitly disabled', async () => {
+    const skill: SkillDefinition = {
+      id: 'cc-tutor',
+      sourceUrl: null,
+      name: 'cc-tutor',
+      description: 'Tutor skill',
+      splitStrategy: 'none',
+      priority: 'critical',
+      static: true,
+      disableModelInvocation: false,
+    }
+
+    const result = await transformSkill(skill, 'Tutor body')
+
+    expect(result).toHaveLength(1)
+    expect(result[0].content).not.toContain('disable-model-invocation:')
   })
 })
