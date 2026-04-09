@@ -1,10 +1,18 @@
 import type { Command } from 'commander'
-import { SKILLS_REGISTRY, type SkillDefinition } from '../config/skills-registry.js'
+import { SKILLS_REGISTRY, mergeWithDiscovered, type SkillDefinition } from '../config/skills-registry.js'
 import { loadConfig } from '../config/loader.js'
 import { fetchDoc } from '../core/fetcher.js'
 import { transformSkill } from '../core/transformer.js'
 import { install, pruneManagedSkills } from '../core/installer.js'
-import { readMeta, writeMeta, isStale } from '../core/meta.js'
+import { discoverSkills, LLMS_TXT_URL } from '../core/discovery.js'
+import { generateSkillIndex } from '../core/skill-index.js'
+import {
+  readMeta,
+  writeMeta,
+  isStale,
+  loadDiscoveredSkills,
+  persistDiscoveredSkills,
+} from '../core/meta.js'
 import { ensurePermissions } from '../core/hook-manager.js'
 import { log, warn, setSilent } from '../utils/logger.js'
 import { readFileSync } from 'node:fs'
@@ -16,6 +24,7 @@ interface SyncOptions {
   ifStale?: string
   silent?: boolean
   skills?: string[]
+  bundledOnly?: boolean
 }
 
 interface SyncResult {
@@ -37,6 +46,14 @@ function loadStaticSkillContent(skillId: string): string {
   return readFileSync(skillPath, 'utf-8')
 }
 
+function injectSkillIndex(content: string, discovered: SkillDefinition[]): string {
+  const dynamicIndex = generateSkillIndex(SKILLS_REGISTRY, discovered).trimEnd()
+  if (content.includes('## Skills disponibles')) {
+    return content.replace(/## Skills disponibles[\s\S]*$/m, dynamicIndex)
+  }
+  return `${content.trimEnd()}\n\n${dynamicIndex}\n`
+}
+
 export async function syncCore(options: SyncOptions): Promise<SyncResult[]> {
   if (options.silent) {
     setSilent(true)
@@ -53,16 +70,23 @@ export async function syncCore(options: SyncOptions): Promise<SyncResult[]> {
     }
   }
 
+  const meta = readMeta()
+  let discoveredSkills = options.bundledOnly ? [] : loadDiscoveredSkills(meta)
+  const registryWithDiscovered = options.bundledOnly
+    ? SKILLS_REGISTRY
+    : mergeWithDiscovered(discoveredSkills)
+
   // Filter skills
   let skills: SkillDefinition[]
   if (options.skills && options.skills.length > 0) {
-    skills = SKILLS_REGISTRY.filter((s) => options.skills!.includes(s.id))
+    skills = registryWithDiscovered.filter((s) => options.skills!.includes(s.id))
   } else {
     const priorities = config.skills ?? ['critical', 'high']
-    skills = SKILLS_REGISTRY.filter((s) => priorities.includes(s.priority) || priorities.includes('all'))
+    skills = registryWithDiscovered.filter((s) =>
+      priorities.includes(s.priority) || priorities.includes('all'),
+    )
   }
 
-  const meta = readMeta()
   const results: SyncResult[] = []
   let hasErrors = false
 
@@ -79,16 +103,28 @@ export async function syncCore(options: SyncOptions): Promise<SyncResult[]> {
 
   for (const skill of skills) {
     try {
-      if (skill.static) {
-        // Static skills: install from bundled content (fallback already includes dynamic index for pulse)
-        const content = loadStaticSkillContent(skill.id)
-        install([{ id: skill.id, content }])
-        meta.skills[skill.id] = {
-          syncedAt: new Date().toISOString(),
-          transformedWith: 'fixed',
+      if (skill.static || options.bundledOnly) {
+        // Install from bundled fallback content
+        const fallbackIds = skill.manualSections
+          ? skill.manualSections.map((s) => s.id)
+          : [skill.id]
+        for (const fid of fallbackIds) {
+          try {
+            let content = loadStaticSkillContent(fid)
+            if (fid === 'pulse') {
+              content = injectSkillIndex(content, discoveredSkills)
+            }
+            install([{ id: fid, content }])
+            meta.skills[fid] = {
+              syncedAt: new Date().toISOString(),
+              transformedWith: 'fixed',
+            }
+          } catch {
+            // No fallback available for this id
+          }
         }
         results.push({ id: skill.id, action: 'updated', transformer: 'fixed' })
-        log(`  ✓ ${skill.id} (static)`)
+        log(`  ✓ ${skill.id} (bundled)`)
         continue
       }
 
@@ -120,7 +156,10 @@ export async function syncCore(options: SyncOptions): Promise<SyncResult[]> {
         warn(`  ⚠ Split failed for ${skill.id}, using bundled fallback`)
         for (const section of skill.manualSections) {
           try {
-            const fallbackContent = loadStaticSkillContent(section.id)
+            let fallbackContent = loadStaticSkillContent(section.id)
+            if (section.id === 'pulse') {
+              fallbackContent = injectSkillIndex(fallbackContent, discoveredSkills)
+            }
             transformed.push({
               id: section.id,
               filename: `.claude/skills/${section.id}/SKILL.md`,
@@ -158,7 +197,10 @@ export async function syncCore(options: SyncOptions): Promise<SyncResult[]> {
 
       for (const fid of fallbackIds) {
         try {
-          const fallbackContent = loadStaticSkillContent(fid)
+          let fallbackContent = loadStaticSkillContent(fid)
+          if (fid === 'pulse') {
+            fallbackContent = injectSkillIndex(fallbackContent, discoveredSkills)
+          }
           install([{ id: fid, content: fallbackContent }])
           meta.skills[fid] = {
             syncedAt: new Date().toISOString(),
@@ -178,6 +220,72 @@ export async function syncCore(options: SyncOptions): Promise<SyncResult[]> {
         warn(`  ✗ ${skill.id} failed: ${msg}`)
         results.push({ id: skill.id, action: 'failed', error: msg })
       }
+    }
+  }
+
+  if (!options.bundledOnly && (!options.skills || options.skills.length === 0)) {
+    const knownDiscoveredIds = new Set(discoveredSkills.map((skill) => skill.id))
+    const previousDiscoveryEtag = meta.etags[LLMS_TXT_URL]
+
+    try {
+      const latestDiscovered = await discoverSkills(SKILLS_REGISTRY, meta)
+      const discoveryChanged = previousDiscoveryEtag !== meta.etags[LLMS_TXT_URL]
+
+      if (latestDiscovered.length > 0 || discoveryChanged) {
+        persistDiscoveredSkills(meta, latestDiscovered)
+        discoveredSkills = latestDiscovered
+      }
+
+      const newlyDiscovered = latestDiscovered.filter((skill) => !knownDiscoveredIds.has(skill.id))
+      for (const skill of newlyDiscovered) {
+        try {
+          if (!skill.sourceUrl) {
+            continue
+          }
+
+          const etag = options.force ? undefined : meta.etags[skill.sourceUrl]
+          const fetchResult = await fetchDoc(skill.sourceUrl, etag)
+          if (!fetchResult.changed) {
+            results.push({
+              id: skill.id,
+              action: 'skipped',
+              transformer: meta.skills[skill.id]?.transformedWith,
+            })
+            log(`  · ${skill.id} unchanged (304)`)
+            continue
+          }
+
+          if (fetchResult.etag) {
+            meta.etags[skill.sourceUrl] = fetchResult.etag
+          }
+
+          const transformed = await transformSkill(skill, fetchResult.content)
+          install(transformed.map((t) => ({ id: t.id, content: t.content })))
+
+          for (const t of transformed) {
+            meta.skills[t.id] = {
+              syncedAt: new Date().toISOString(),
+              transformedWith: t.transformedWith,
+              etag: fetchResult.etag,
+            }
+          }
+
+          results.push({
+            id: skill.id,
+            action: 'updated',
+            transformer: transformed[0]?.transformedWith,
+          })
+          log(`  ✓ ${skill.id} discovered and installed`)
+        } catch (error) {
+          hasErrors = true
+          const message = error instanceof Error ? error.message : String(error)
+          warn(`  ! discovered skill ${skill.id} failed: ${message}`)
+          results.push({ id: skill.id, action: 'failed', error: message })
+        }
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      warn(`  ! Discovery failed but sync will continue: ${message}`)
     }
   }
 

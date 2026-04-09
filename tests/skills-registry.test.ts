@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { filterByPriority, SKILLS_REGISTRY } from '../src/config/skills-registry.js'
+import {
+  filterByPriority,
+  mergeWithDiscovered,
+  SKILLS_REGISTRY,
+  type SkillDefinition,
+} from '../src/config/skills-registry.js'
 
 describe('filterByPriority', () => {
   it('excludes medium when filtering critical and high', () => {
@@ -39,5 +44,51 @@ describe('filterByPriority', () => {
       const uniqueDescriptions = new Set(descriptions)
       expect(uniqueDescriptions.size).toBe(descriptions.length)
     }
+  })
+})
+
+describe('mergeWithDiscovered', () => {
+  it('appends discovered skills when there are no duplicate ids', () => {
+    const discovered: SkillDefinition[] = [
+      {
+        id: 'cc-chrome',
+        sourceUrl: 'https://code.claude.com/docs/en/chrome.md',
+        name: 'cc-chrome',
+        description: 'Chrome docs',
+        priority: 'medium',
+      },
+      {
+        id: 'cc-voice-dictation',
+        sourceUrl: 'https://code.claude.com/docs/en/voice-dictation.md',
+        name: 'cc-voice-dictation',
+        description: 'Voice docs',
+        priority: 'medium',
+      },
+    ]
+
+    const merged = mergeWithDiscovered(discovered)
+    expect(merged.length).toBe(SKILLS_REGISTRY.length + 2)
+    expect(merged.some((skill) => skill.id === 'cc-chrome')).toBe(true)
+    expect(merged.some((skill) => skill.id === 'cc-voice-dictation')).toBe(true)
+  })
+
+  it('excludes discovered entries with duplicate ids', () => {
+    const discovered: SkillDefinition[] = [
+      {
+        id: 'cc-permissions',
+        sourceUrl: 'https://code.claude.com/docs/en/permissions.md',
+        name: 'cc-permissions',
+        description: 'Duplicate',
+        priority: 'medium',
+      },
+    ]
+
+    const merged = mergeWithDiscovered(discovered)
+    expect(merged.length).toBe(SKILLS_REGISTRY.length)
+    expect(merged.filter((skill) => skill.id === 'cc-permissions').length).toBe(1)
+  })
+
+  it('returns registry unchanged when discovered list is empty', () => {
+    expect(mergeWithDiscovered([])).toEqual(SKILLS_REGISTRY)
   })
 })

@@ -289,3 +289,13 @@ export function filterByPriority(priorities: string[]): SkillDefinition[] {
       : priorities
   return SKILLS_REGISTRY.filter((s) => expanded.includes(s.priority))
 }
+
+export function mergeWithDiscovered(discovered: SkillDefinition[]): SkillDefinition[] {
+  if (discovered.length === 0) {
+    return SKILLS_REGISTRY
+  }
+
+  const registryIds = new Set(SKILLS_REGISTRY.map((skill) => skill.id))
+  const uniqueDiscovered = discovered.filter((skill) => !registryIds.has(skill.id))
+  return [...SKILLS_REGISTRY, ...uniqueDiscovered]
+}

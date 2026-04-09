@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { getVersion } from '../version.js'
+import type { SkillDefinition } from '../config/skills-registry.js'
 
 export interface SkillMeta {
   syncedAt: string
@@ -16,6 +17,21 @@ export interface PulseMeta {
   firstSessionDone: boolean
   skills: Record<string, SkillMeta>
   etags: Record<string, string>
+  discoveredSkills: Record<string, DiscoveredSkillEntry>
+}
+
+export interface DiscoveredSkillEntry {
+  id: string
+  sourceUrl: string
+  name: string
+  description: string
+  discoveredAt: string
+  fromLlmsTxt: true
+  priority: 'medium'
+  disableModelInvocation: true
+  splitStrategy: 'none'
+  tokenBudget: 600
+  static: false
 }
 
 function metaPath(): string {
@@ -30,6 +46,7 @@ function defaultMeta(): PulseMeta {
     firstSessionDone: false,
     skills: {},
     etags: {},
+    discoveredSkills: {},
   }
 }
 
@@ -65,4 +82,45 @@ export function isStale(maxAgeSeconds: number): boolean {
 
   const elapsed = (Date.now() - lastSyncTime) / 1000
   return elapsed > maxAgeSeconds
+}
+
+export function persistDiscoveredSkills(meta: PulseMeta, discovered: SkillDefinition[]): void {
+  const discoveredAt = new Date().toISOString()
+  const entries: Record<string, DiscoveredSkillEntry> = {}
+
+  for (const skill of discovered) {
+    if (!skill.sourceUrl) {
+      continue
+    }
+
+    entries[skill.id] = {
+      id: skill.id,
+      sourceUrl: skill.sourceUrl,
+      name: skill.name,
+      description: skill.description,
+      discoveredAt,
+      fromLlmsTxt: true,
+      priority: 'medium',
+      disableModelInvocation: true,
+      splitStrategy: 'none',
+      tokenBudget: 600,
+      static: false,
+    }
+  }
+
+  meta.discoveredSkills = entries
+}
+
+export function loadDiscoveredSkills(meta: PulseMeta): SkillDefinition[] {
+  return Object.values(meta.discoveredSkills ?? {}).map((entry) => ({
+    id: entry.id,
+    sourceUrl: entry.sourceUrl,
+    name: entry.name,
+    description: entry.description.slice(0, 250),
+    priority: 'medium',
+    disableModelInvocation: true,
+    splitStrategy: 'none',
+    tokenBudget: 600,
+    static: false,
+  }))
 }

@@ -66,14 +66,14 @@ describe('platform', () => {
   it('getHookCommand returns windows command format', async () => {
     const mod = await loadPlatformModule({ platform: 'win32' })
     expect(mod.getHookCommand()).toBe(
-      'npx.cmd pulse sync --if-stale 86400 --silent & npx.cmd pulse greet --once',
+      'npx.cmd pulse sync --if-stale 86400 --silent & npx.cmd pulse greet',
     )
   })
 
   it('getHookCommand returns unix command format for unix and wsl', async () => {
     const unixModule = await loadPlatformModule({ platform: 'darwin' })
     expect(unixModule.getHookCommand()).toBe(
-      'npx pulse sync --if-stale 86400 --silent && npx pulse greet --once || true',
+      'npx pulse sync --if-stale 86400 --silent && npx pulse greet || true',
     )
 
     const wslModule = await loadPlatformModule({
@@ -82,7 +82,7 @@ describe('platform', () => {
       procVersionContent: 'microsoft',
     })
     expect(wslModule.getHookCommand()).toBe(
-      'npx pulse sync --if-stale 86400 --silent && npx pulse greet --once || true',
+      'npx pulse sync --if-stale 86400 --silent && npx pulse greet || true',
     )
   })
 })

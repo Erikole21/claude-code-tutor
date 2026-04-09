@@ -89,10 +89,11 @@ export function registerInit(program: Command): void {
           }
         }
 
-        // Run sync
+        // Install bundled skills (no fetch, instant)
         log('')
         const syncOpts = {
           force: true,
+          bundledOnly: true,
           skills: opts.skills,
         }
         await syncCore(syncOpts)

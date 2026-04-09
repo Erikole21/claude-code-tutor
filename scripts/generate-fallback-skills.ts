@@ -1,11 +1,13 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { SKILLS_REGISTRY, type SkillDefinition, type ManualSection } from '../src/config/skills-registry.js'
+import { SKILLS_REGISTRY, mergeWithDiscovered, type SkillDefinition, type ManualSection } from '../src/config/skills-registry.js'
 import { fetchDoc } from '../src/core/fetcher.js'
+import { discoverSkills } from '../src/core/discovery.js'
 import { splitDocument } from '../src/core/splitter.js'
 import { transformStatic } from '../src/core/transformer-static.js'
 import { generateSkillIndex } from '../src/core/skill-index.js'
+import type { PulseMeta } from '../src/core/meta.js'
 import { log, warn } from '../src/utils/logger.js'
 
 const thisFile = fileURLToPath(import.meta.url)
@@ -88,10 +90,14 @@ function writeFallbackSkill(
   writeFileSync(outputFile, content, 'utf-8')
 }
 
-async function processStaticSkill(def: SkillDefinition, syncedAt: string): Promise<number> {
+async function processStaticSkill(
+  def: SkillDefinition,
+  syncedAt: string,
+  discovered: SkillDefinition[],
+): Promise<number> {
   let body = readStaticSkillBody(def.id)
   if (def.id === 'pulse') {
-    body = body.trimEnd() + '\n\n' + generateSkillIndex(SKILLS_REGISTRY).trimEnd()
+    body = body.trimEnd() + '\n\n' + generateSkillIndex(SKILLS_REGISTRY, discovered).trimEnd()
   }
   writeFallbackSkill(
     def.id,
@@ -149,10 +155,22 @@ async function main(): Promise<void> {
 
   log('Generating fallback skills...')
 
-  for (const def of SKILLS_REGISTRY) {
+  const discoveryMeta: PulseMeta = {
+    version: 'build',
+    lastSync: '',
+    lastSyncStatus: 'success',
+    firstSessionDone: false,
+    skills: {},
+    etags: {},
+    discoveredSkills: {},
+  }
+  const discoveredSkills = await discoverSkills(SKILLS_REGISTRY, discoveryMeta)
+  const skillsToGenerate = mergeWithDiscovered(discoveredSkills)
+
+  for (const def of skillsToGenerate) {
     try {
       if (def.static) {
-        generatedCount += await processStaticSkill(def, syncedAt)
+        generatedCount += await processStaticSkill(def, syncedAt, discoveredSkills)
       } else {
         generatedCount += await processDocSkill(def, syncedAt)
       }

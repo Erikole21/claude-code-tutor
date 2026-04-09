@@ -1,8 +1,8 @@
 import type { Command } from 'commander'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
-import { SKILLS_REGISTRY } from '../config/skills-registry.js'
-import { readMeta } from '../core/meta.js'
+import { mergeWithDiscovered, SKILLS_REGISTRY } from '../config/skills-registry.js'
+import { loadDiscoveredSkills, readMeta } from '../core/meta.js'
 import { log } from '../utils/logger.js'
 
 const MAX_AGE_SECONDS = 86400 // 24 hours
@@ -28,11 +28,13 @@ export function registerList(program: Command): void {
     .description('List all skills and their sync status')
     .action(async () => {
       const meta = readMeta()
+      const discovered = loadDiscoveredSkills(meta)
+      const allSkills = mergeWithDiscovered(discovered)
 
       log('  Status  Skill ID                Last Sync            Transformer')
       log('  ' + '─'.repeat(70))
 
-      for (const skill of SKILLS_REGISTRY) {
+      for (const skill of allSkills) {
         const icon = statusIcon(skill.id, meta)
         const skillMeta = meta.skills[skill.id]
         const id = skill.id.padEnd(22)
@@ -46,7 +48,7 @@ export function registerList(program: Command): void {
       }
 
       log('')
-      const installed = Object.keys(meta.skills).length
-      log(`  ${installed} / ${SKILLS_REGISTRY.length} skills tracked`)
+      const tracked = allSkills.filter((skill) => statusIcon(skill.id, meta) !== '✗').length
+      log(`  ${tracked} / ${allSkills.length} skills tracked`)
     })
 }

@@ -42,7 +42,10 @@ describe('hook-manager', () => {
       addHook()
 
       const settings = readSettings(dir)
-      expect(settings.permissions).toEqual({})
+      expect(settings.permissions).toBeDefined()
+      expect(Array.isArray(settings.permissions.allow)).toBe(true)
+      expect(settings.permissions.allow.length).toBeGreaterThan(0)
+      expect(settings.permissions.allow).toContain('Bash(pulse memory*)')
       expect(settings.hooks.SessionStart).toHaveLength(1)
       expect(settings.hooks.SessionStart[0]._pulse).toBe(true)
       expect(settings.hooks.SessionStart[0].matcher).toBe('')

@@ -1,13 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SkillDefinition } from '../src/config/skills-registry.js'
 
-const { claudeMock, staticMock } = vi.hoisted(() => ({
-  claudeMock: vi.fn(),
+const { staticMock } = vi.hoisted(() => ({
   staticMock: vi.fn(),
-}))
-
-vi.mock('../src/core/transformer-claude.js', () => ({
-  transformWithClaude: claudeMock,
 }))
 
 vi.mock('../src/core/transformer-static.js', () => ({
@@ -18,7 +13,6 @@ import { transformSkill } from '../src/core/transformer.js'
 
 describe('transformer orchestrator', () => {
   beforeEach(() => {
-    claudeMock.mockReset()
     staticMock.mockReset()
   })
 
@@ -43,12 +37,10 @@ describe('transformer orchestrator', () => {
     expect(result[0].content).toContain('_pulse: true')
     expect(result[0].content).toContain('_source: "static"')
     expect(result[0].content).not.toContain('_transformedWith:')
-    expect(claudeMock).not.toHaveBeenCalled()
     expect(staticMock).not.toHaveBeenCalled()
   })
 
-  it('falls back to static transformer when claude returns null', async () => {
-    claudeMock.mockResolvedValue(null)
+  it('transforms non-static content with static transformer', async () => {
     staticMock.mockReturnValue('## Output\n- item')
 
     const skill: SkillDefinition = {
@@ -63,8 +55,11 @@ describe('transformer orchestrator', () => {
 
     const result = await transformSkill(skill, 'Raw markdown')
 
-    expect(claudeMock).toHaveBeenCalledWith('Raw markdown', 250)
-    expect(staticMock).toHaveBeenCalledWith('Raw markdown', 250)
+    expect(staticMock).toHaveBeenCalledWith(
+      'Raw markdown',
+      250,
+      'https://example.com/doc.md',
+    )
     expect(result).toHaveLength(1)
     expect(result[0].transformedWith).toBe('static')
     expect(result[0].filename).toBe('.claude/skills/cc-doc/SKILL.md')

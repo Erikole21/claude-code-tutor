@@ -54,4 +54,33 @@ describe('generateSkillIndex', () => {
       expect(line).toMatch(/^- `\/[\w-]+` — .+/)
     }
   })
+
+  it('includes discovered skills under Additional docs section', () => {
+    const discovered: SkillDefinition[] = [
+      {
+        id: 'cc-chrome',
+        sourceUrl: 'https://code.claude.com/docs/en/chrome.md',
+        name: 'cc-chrome',
+        description: 'Chrome docs',
+        priority: 'medium',
+      },
+      {
+        id: 'cc-voice-dictation',
+        sourceUrl: 'https://code.claude.com/docs/en/voice-dictation.md',
+        name: 'cc-voice-dictation',
+        description: 'Voice docs',
+        priority: 'medium',
+      },
+    ]
+
+    const withDiscovered = generateSkillIndex(SKILLS_REGISTRY, discovered)
+    expect(withDiscovered).toContain('### Additional docs')
+    expect(withDiscovered).toContain('`/cc-chrome`')
+    expect(withDiscovered).toContain('`/cc-voice-dictation`')
+  })
+
+  it('keeps output unchanged when discovered list is omitted', () => {
+    const withoutDiscovered = generateSkillIndex(SKILLS_REGISTRY)
+    expect(withoutDiscovered).not.toContain('### Additional docs')
+  })
 })

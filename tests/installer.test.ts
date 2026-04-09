@@ -103,6 +103,7 @@ describe('installer', () => {
           'cc-hooks-events': { syncedAt: new Date().toISOString(), transformedWith: 'claude' },
         },
         etags: {},
+        discoveredSkills: {},
       }
       writeMeta(meta)
 

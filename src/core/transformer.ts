@@ -1,6 +1,5 @@
 import type { SkillDefinition } from '../config/skills-registry.js'
 import { transformStatic } from './transformer-static.js'
-import { transformWithClaude } from './transformer-claude.js'
 import { splitDocument } from './splitter.js'
 import { log } from '../utils/logger.js'
 
@@ -71,20 +70,14 @@ export async function transformSkill(
   const strategy = def.splitStrategy ?? 'none'
   const sections = splitDocument(rawContent, strategy, def.manualSections)
 
-  // Transform each section
-  const transformedSections: { id: string; content: string; method: 'claude' | 'static' }[] = []
+  // Transform each section with static transformer (fast, no API calls)
+  const transformedSections: { id: string; content: string; method: 'static' }[] = []
   for (const section of sections) {
-    const claudeResult = await transformWithClaude(section.content, tokenBudget, source)
-    if (claudeResult) {
-      transformedSections.push({ id: section.id, content: claudeResult, method: 'claude' })
-    } else {
-      transformedSections.push({ id: section.id, content: transformStatic(section.content, tokenBudget, source), method: 'static' })
-    }
+    transformedSections.push({ id: section.id, content: transformStatic(section.content, tokenBudget, source), method: 'static' })
   }
 
   if (transformedSections.length > 0) {
-    const method = transformedSections[0].method
-    log(`  → ${def.id}: transformed with ${method === 'claude' ? 'Claude' : 'static fallback'}`)
+    log(`  → ${def.id}: transformed with static`)
   }
 
   // Generate TransformedSkill for each section

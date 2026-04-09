@@ -8,7 +8,10 @@ const PRIORITY_LABELS: Record<string, string> = {
 
 const PRIORITY_ORDER = ['critical', 'high', 'medium'] as const
 
-export function generateSkillIndex(registry: SkillDefinition[]): string {
+export function generateSkillIndex(
+  registry: SkillDefinition[],
+  discovered: SkillDefinition[] = [],
+): string {
   const entries = registry.filter((s) => s.id !== 'pulse')
 
   const grouped = new Map<string, string[]>()
@@ -40,6 +43,15 @@ export function generateSkillIndex(registry: SkillDefinition[]): string {
     sections.push('')
     sections.push(`### ${PRIORITY_LABELS[priority]}`)
     sections.push(lines.join('\n'))
+  }
+
+  const discoveredEntries = discovered.filter((skill) => skill.id !== 'pulse')
+  if (discoveredEntries.length > 0) {
+    sections.push('')
+    sections.push('### Additional docs')
+    sections.push(
+      discoveredEntries.map((skill) => `- \`/${skill.id}\` — ${skill.description}`).join('\n'),
+    )
   }
 
   return sections.join('\n') + '\n'
