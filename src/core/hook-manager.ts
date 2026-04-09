@@ -78,6 +78,7 @@ function getPulseMemoryPermissions(): string[] {
     'Edit(~\\.claude\\pulse\\**)',
     'Write(~\\.claude\\pulse\\**)',
     `Bash(pulse memory*)`,
+    `Bash(cd*pulse memory*)`,
   ]
 }
 

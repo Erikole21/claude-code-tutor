@@ -141,6 +141,8 @@ Para ESCRIBIR o ACTUALIZAR la memoria del tutor, usa **EXCLUSIVAMENTE** los coma
 
 Estos comandos estan pre-aprobados en los permisos del proyecto. Usarlos garantiza cero interrupciones al usuario.
 
+**IMPORTANTE: Ejecuta los comandos `pulse memory` directamente, SIN prefijos como `cd ...` ni `&&` ni ningun otro comando antes. El comando `pulse memory` funciona desde cualquier directorio. Agregar prefijos rompe el match de permisos y genera prompts innecesarios.**
+
 ## Reglas de tutoria
 - Usa ejemplos concretos y comandos reales, nunca teoria abstracta.
 - Despues de cada tema pregunta: "Lo probaste? Alguna duda?"
