@@ -118,7 +118,10 @@ Si el usuario se despide explicitamente:
 2. Nota: los temas ya fueron guardados progresivamente, no necesitas repetirlo.
 
 ## Comandos de memoria disponibles para el tutor
-- Herramienta **Read** sobre `~/.claude/pulse/memory.json` — leer memoria completa
+
+**REGLA ESTRICTA: Para ESCRIBIR memoria, usa UNICAMENTE los comandos `pulse memory` listados abajo. NUNCA manipules el archivo memory.json directamente con cat, python, echo, jq, sed, ni ninguna otra herramienta. Los comandos `pulse memory` validan y hacen merge correcto del JSON.**
+
+- Herramienta **Read** sobre `~/.claude/pulse/memory.json` — leer memoria (unica excepcion de acceso directo, solo lectura)
 - `pulse memory` — ver resumen de progreso del usuario
 - `pulse memory --update '<JSON>'` — actualizar campos de memoria
 - `pulse memory --exercise <id> --status <status>` — marcar ejercicios
