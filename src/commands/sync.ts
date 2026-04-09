@@ -15,7 +15,7 @@ import {
 } from '../core/meta.js'
 import { ensurePermissions } from '../core/hook-manager.js'
 import { log, warn, setSilent } from '../utils/logger.js'
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync, existsSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -44,6 +44,14 @@ function loadStaticSkillContent(skillId: string): string {
   const fallbackDir = getSkillsFallbackDir()
   const skillPath = join(fallbackDir, skillId, 'SKILL.md')
   return readFileSync(skillPath, 'utf-8')
+}
+
+function listBundledSkillIds(): string[] {
+  const fallbackDir = getSkillsFallbackDir()
+  if (!existsSync(fallbackDir)) return []
+  return readdirSync(fallbackDir, { withFileTypes: true })
+    .filter((d) => d.isDirectory() && existsSync(join(fallbackDir, d.name, 'SKILL.md')))
+    .map((d) => d.name)
 }
 
 function injectSkillIndex(content: string, discovered: SkillDefinition[]): string {
@@ -76,7 +84,62 @@ export async function syncCore(options: SyncOptions): Promise<SyncResult[]> {
     ? SKILLS_REGISTRY
     : mergeWithDiscovered(discoveredSkills)
 
-  // Filter skills
+  const results: SyncResult[] = []
+  let hasErrors = false
+
+  // bundledOnly: install everything from skills-fallback/ without filtering
+  if (options.bundledOnly) {
+    const bundledIds = listBundledSkillIds()
+
+    if (options.force) {
+      const allowedIds = new Set(bundledIds)
+      const removedIds = pruneManagedSkills(allowedIds)
+      for (const id of removedIds) {
+        delete meta.skills[id]
+        log(`  ✓ ${id} removed (obsolete managed skill)`)
+      }
+    }
+
+    log('Syncing skills...')
+
+    for (const fid of bundledIds) {
+      try {
+        let content = loadStaticSkillContent(fid)
+        if (fid === 'pulse' || fid === 'cc-learning-path') {
+          content = injectSkillIndex(content, discoveredSkills)
+        }
+        install([{ id: fid, content }])
+        meta.skills[fid] = {
+          syncedAt: new Date().toISOString(),
+          transformedWith: 'fixed',
+        }
+        results.push({ id: fid, action: 'updated', transformer: 'fixed' })
+        log(`  ✓ ${fid} (bundled)`)
+      } catch {
+        // No fallback available for this id
+      }
+    }
+
+    // Ensure permissions are up-to-date
+    ensurePermissions()
+
+    // Update meta
+    meta.lastSync = new Date().toISOString()
+    meta.lastSyncStatus = 'success'
+    delete meta.lastSyncError
+    writeMeta(meta)
+
+    if (!options.silent && results.length > 0) {
+      log('')
+      log(`  ${results.length} skills installed from bundle`)
+      log('')
+    }
+
+    setSilent(false)
+    return results
+  }
+
+  // Normal sync: filter by priority
   let skills: SkillDefinition[]
   if (options.skills && options.skills.length > 0) {
     skills = registryWithDiscovered.filter((s) => options.skills!.includes(s.id))
@@ -86,9 +149,6 @@ export async function syncCore(options: SyncOptions): Promise<SyncResult[]> {
       priorities.includes(s.priority) || priorities.includes('all'),
     )
   }
-
-  const results: SyncResult[] = []
-  let hasErrors = false
 
   if (options.force) {
     const allowedIds = new Set(skills.map((s) => s.id))
@@ -103,7 +163,7 @@ export async function syncCore(options: SyncOptions): Promise<SyncResult[]> {
 
   for (const skill of skills) {
     try {
-      if (skill.static || options.bundledOnly) {
+      if (skill.static) {
         // Install from bundled fallback content
         const fallbackIds = skill.manualSections
           ? skill.manualSections.map((s) => s.id)

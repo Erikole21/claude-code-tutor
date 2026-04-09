@@ -3,7 +3,6 @@ import { existsSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { createInterface } from 'node:readline'
 import { SKILLS_REGISTRY } from '../config/skills-registry.js'
-import { loadConfig } from '../config/loader.js'
 import { readMeta, writeMeta, getMetaPath } from '../core/meta.js'
 import { addHook } from '../core/hook-manager.js'
 import { syncCore } from './sync.js'
@@ -57,27 +56,10 @@ export function registerInit(program: Command): void {
           mkdirSync(skillsDir, { recursive: true })
         }
 
-        // Determine skills to install
-        const config = await loadConfig()
-        let skillsToInstall = SKILLS_REGISTRY
-        if (opts.skills && opts.skills.length > 0) {
-          skillsToInstall = SKILLS_REGISTRY.filter((s) => opts.skills!.includes(s.id))
-        } else {
-          const priorities = config.skills ?? ['critical', 'high']
-          skillsToInstall = SKILLS_REGISTRY.filter(
-            (s) => priorities.includes(s.priority) || priorities.includes('all'),
-          )
-        }
-
         // Show preview
-        log('Skills to install:')
-        log('')
-        for (const skill of skillsToInstall) {
-          const tag = skill.static ? ' (static)' : ''
-          log(`  [${skill.priority}] ${skill.id}${tag}`)
-        }
-        log('')
-        log(`Total: ${skillsToInstall.length} skills`)
+        const curatedCount = SKILLS_REGISTRY.length
+        log(`pulse will install ${curatedCount} curated skills + auto-discovered docs from the official Claude Code documentation.`)
+        log('Skills load on demand — only pulse is active by default. Zero context overhead.')
         log('')
 
         // Confirm
