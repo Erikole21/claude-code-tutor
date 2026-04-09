@@ -55,7 +55,7 @@ async function showProgress(): Promise<void> {
   // Last session
   if (memory.lastSession) {
     log(`\n  Last session: ${formatDate(memory.lastSession.date)}`)
-    if (memory.lastSession.topicsCovered.length > 0) {
+    if (memory.lastSession.topicsCovered?.length > 0) {
       log(`  Topics:       ${memory.lastSession.topicsCovered.join(', ')}`)
     }
     if (memory.lastSession.endNote) {

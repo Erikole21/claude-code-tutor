@@ -81,7 +81,17 @@ export function getDefaultMemory(): PulseUserMemory {
 export async function readMemory(): Promise<PulseUserMemory | null> {
   try {
     const raw = await readFile(memoryPath(), 'utf-8')
-    return JSON.parse(raw) as PulseUserMemory
+    const parsed = JSON.parse(raw) as Partial<PulseUserMemory>
+    const merged = { ...getDefaultMemory(), ...parsed }
+    if (merged.lastSession) {
+      merged.lastSession = {
+        date: merged.lastSession.date ?? '',
+        topicsCovered: merged.lastSession.topicsCovered ?? [],
+        endNote: merged.lastSession.endNote ?? '',
+        duration: merged.lastSession.duration,
+      }
+    }
+    return merged
   } catch {
     return null
   }
